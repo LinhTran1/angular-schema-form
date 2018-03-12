@@ -6,11 +6,11 @@
  *
  * @return {[type]}                [description]
  */
-export default function(sfPathProvider) {
+export default function (sfPathProvider) {
   let SNAKE_CASE_REGEXP = /[A-Z]/g;
-  let snakeCase = function(name, separator) {
+  let snakeCase = function (name, separator) {
     separator = separator || '_';
-    return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+    return name.replace(SNAKE_CASE_REGEXP, function (letter, pos) {
       return (pos ? separator : '') + letter.toLowerCase();
     });
   };
@@ -27,14 +27,14 @@ export default function(sfPathProvider) {
   }
 
   let builders = {
-    sfField: function(args) {
+    sfField: function (args) {
       args.fieldFrag.firstElementChild.setAttribute('sf-field', formId);
 
       // We use a lookup table for easy access to our form.
       args.lookup['f' + formId] = args.form;
       formId++;
     },
-    ngModel: function(args) {
+    ngModel: function (args) {
       if (!args.form.key) {
         return;
       };
@@ -56,8 +56,7 @@ export default function(sfPathProvider) {
         if (strKey) { // Sometimes, like with arrays directly in arrays strKey is nothing.
           modelValue += (strKey[0] !== '[' ? '.' : '') + strKey;
         }
-      }
-      else {
+      } else {
         // Another builder, i.e. array has overriden the modelValue
         modelValue = args.state.modelValue;
       }
@@ -72,40 +71,37 @@ export default function(sfPathProvider) {
         let conf = n.getAttribute('sf-field-model');
         if (!conf || conf === '') {
           n.setAttribute('ng-model', modelValue);
-        }
-        else if (conf === 'replaceAll') {
+        } else if (conf === 'replaceAll') {
           let attributes = n.attributes;
           for (let j = 0; j < attributes.length; j++) {
             if (attributes[j].value && attributes[j].value.indexOf('$$value') !== -1) {
               attributes[j].value = attributes[j].value.replace(/\$\$value\$\$/g, modelValue);
             }
           }
-        }
-        else {
+        } else {
           let val = n.getAttribute(conf);
           if (val && val.indexOf('$$value$$')) {
             n.setAttribute(conf, val.replace(/\$\$value\$\$/g, modelValue));
-          }
-          else {
+          } else {
             n.setAttribute(conf, modelValue);
           }
         }
       }
     },
-    simpleTransclusion: function(args) {
+    simpleTransclusion: function (args) {
       let children = args.build(args.form.items, args.path + '.items', args.state);
       args.fieldFrag.firstChild.appendChild(children);
     },
 
     // Patch on ngModelOptions, since it doesn't like waiting for its value.
-    ngModelOptions: function(args) {
+    ngModelOptions: function (args) {
       if (args.form.ngModelOptions && Object.keys(args.form.ngModelOptions).length > 0) {
         args.fieldFrag
           .firstChild
           .setAttribute('ng-model-options', JSON.stringify(args.form.ngModelOptions));
       }
     },
-    transclusion: function(args) {
+    transclusion: function (args) {
       let transclusions = args.fieldFrag.querySelectorAll('[sf-field-transclude]');
 
       if (transclusions.length) {
@@ -125,7 +121,7 @@ export default function(sfPathProvider) {
         }
       }
     },
-    condition: function(args) {
+    condition: function (args) {
       let strKey = '';
       let strModel = 'undefined';
       let ngIf = '';
@@ -138,33 +134,33 @@ export default function(sfPathProvider) {
         }
 
         let evalExpr = 'evalExpr(' + args.path + '.condition, { model: model, ' +
-                       '"arrayIndex": $index, ' +
-                       '"arrayIndices": arrayIndices, ' +
-                       '"path": path, ' +
-                       '"$i": $i, ' +
-                       '"$index": $index, ' +
-                       '"modelValue": ' + strModel + '})';
+          '"arrayIndex": $index, ' +
+          '"arrayIndices": arrayIndices, ' +
+          '"path": path, ' +
+          '"$i": $i, ' +
+          '"$index": $index, ' +
+          '"modelValue": ' + strModel + '})';
 
         let children = args.fieldFrag.children || args.fieldFrag.childNodes;
 
         for (let i = 0; i < children.length; i++) {
           let child = children[i];
 
-          if(child.hasAttribute && child.hasAttribute('ng-if')) {
+          if (child.hasAttribute && child.hasAttribute('ng-if')) {
             ngIf = child.getAttribute('ng-if');
           };
 
-          if(child.setAttribute) {
+          if (child.setAttribute) {
             child.setAttribute('ng-if',
-              ngIf
-              ? '(' + ngIf + ') || (' + evalExpr + ')'
-              : evalExpr
+              ngIf ?
+              '(' + ngIf + ') || (' + evalExpr + ')' :
+              evalExpr
             );
           };
         }
       }
     },
-    array: function(args) {
+    array: function (args) {
       let items = args.fieldFrag.querySelector('[schema-form-array-items]');
 
       if (items) {
@@ -175,12 +171,11 @@ export default function(sfPathProvider) {
         // Special case, an array with just one item in it that is not an object.
         // So then we just override the modelValue
         if (args.form.schema && args.form.schema.items &&
-            args.form.schema.items.type &&
-            args.form.schema.items.type.indexOf('object') === -1 &&
-            args.form.schema.items.type.indexOf('array') === -1) {
+          args.form.schema.items.type &&
+          args.form.schema.items.type.indexOf('object') === -1 &&
+          args.form.schema.items.type.indexOf('array') === -1) {
           state.modelValue = 'modelArray[$index]';
-        }
-        else {
+        } else {
           state.modelName = 'item';
         }
 
@@ -193,7 +188,7 @@ export default function(sfPathProvider) {
         items.appendChild(childFrag);
       }
     },
-    numeric: function(args) {
+    numeric: function (args) {
       let inputFrag = args.fieldFrag.querySelector('input');
       let maximum = args.form.maximum || false;
       let exclusiveMaximum = args.form.exclusiveMaximum || false;
@@ -230,118 +225,118 @@ export default function(sfPathProvider) {
   ];
   this.stdBuilders = stdBuilders;
 
-  this.$get = [ '$templateCache', 'schemaFormDecorators', 'sfPath',
-      function($templateCache, schemaFormDecorators, sfPath) {
-    let checkForSlot = function(form, slots) {
-      // Finally append this field to the frag.
-      // Check for slots
-      if (form.key) {
-        let slot = slots[sfPath.stringify(form.key)];
-        if (slot) {
-          while (slot.firstChild) {
-            slot.removeChild(slot.firstChild);
+  this.$get = ['$templateCache', 'schemaFormDecorators', 'sfPath',
+    function ($templateCache, schemaFormDecorators, sfPath) {
+      let checkForSlot = function (form, slots) {
+        // Finally append this field to the frag.
+        // Check for slots
+        if (form.key) {
+          let slot = slots[sfPath.stringify(form.key)];
+          if (slot) {
+            while (slot.firstChild) {
+              slot.removeChild(slot.firstChild);
+            }
+            return slot;
           }
-          return slot;
         }
-      }
-    };
+      };
 
-    let build = function(items, decorator, templateFn, slots, path, state, lookup) {
-      state = state || {};
-      state = state || {};
-      lookup = lookup || Object.create(null);
-      path = path || 'schemaForm.form';
-      let container = document.createDocumentFragment();
-      items.reduce(function(frag, f, index) {
-        // Sanity check.
-        if (!f.type) {
-          return frag;
-        }
+      let build = function (items, decorator, templateFn, slots, path, state, lookup) {
+        state = state || {};
+        state = state || {};
+        lookup = lookup || Object.create(null);
+        path = path || 'schemaForm.form';
+        let container = document.createDocumentFragment();
+        items.reduce(function (frag, f, index) {
+            // Sanity check.
+            if (!f.type) {
+              return frag;
+            }
 
-        let field = decorator[f.type] || decorator['default'];
-        if (!field.replace) {
-          // Backwards compatability build
-          let n = document.createElement(snakeCase(decorator.__name, '-'));
-          if (state.arrayCompatFlag) {
-            n.setAttribute('form', 'copyWithIndex($index)');
-          }
-          else {
-            n.setAttribute('form', path + '[' + index + ']');
-          }
+            let field = decorator[f.type] || decorator['default'];
+            if (!field.replace) {
+              // Backwards compatability build
+              let n = document.createElement(snakeCase(decorator.__name, '-'));
+              if (state.arrayCompatFlag) {
+                n.setAttribute('form', 'copyWithIndex($index)');
+              } else {
+                n.setAttribute('form', path + '[' + index + ']');
+              }
 
-          (checkForSlot(f, slots) || frag).appendChild(n);
-        }
-        else {
-          let tmpl;
+              (checkForSlot(f, slots) || frag).appendChild(n);
+            } else {
+              let tmpl;
 
-          // Reset arrayCompatFlag, it's only valid for direct children of the array.
-          state.arrayCompatFlag = false;
+              // Reset arrayCompatFlag, it's only valid for direct children of the array.
+              state.arrayCompatFlag = false;
 
-          // TODO: Create a couple of testcases, small and large and
-          //       measure optmization. A good start is probably a
-          //       cache of DOM nodes for a particular template
-          //       that can be cloned instead of using innerHTML
-          let div = document.createElement('div');
-          let template = templateFn(f, field) || templateFn(f, decorator['default']);
-          div.innerHTML = template;
+              // TODO: Create a couple of testcases, small and large and
+              //       measure optmization. A good start is probably a
+              //       cache of DOM nodes for a particular template
+              //       that can be cloned instead of using innerHTML
+              let div = document.createElement('div');
+              let template = templateFn(f, field) || templateFn(f, decorator['default']);
+              div.innerHTML = template;
 
-          // Move node to a document fragment, we don't want the div.
-          tmpl = document.createDocumentFragment();
-          while (div.childNodes.length > 0) {
-            tmpl.appendChild(div.childNodes[0]);
-          }
+              // Move node to a document fragment, we don't want the div.
+              tmpl = document.createDocumentFragment();
+              while (div.childNodes.length > 0) {
+                tmpl.appendChild(div.childNodes[0]);
+              }
 
-          // Possible builder, often a noop
-          let args = {
-            fieldFrag: tmpl,
-            form: f,
-            lookup: lookup,
-            state: state,
-            path: path + '[' + index + ']',
+              // Possible builder, often a noop
+              let args = {
+                fieldFrag: tmpl,
+                form: f,
+                lookup: lookup,
+                state: state,
+                path: path + '[' + index + ']',
 
-            // Recursive build fn
-            build: function(items, path, state) {
-              return build(items, decorator, templateFn, slots, path, state, lookup);
-            },
+                // Recursive build fn
+                build: function (items, path, state) {
+                  return build(items, decorator, templateFn, slots, path, state, lookup);
+                },
 
-          };
+              };
 
-          // Let the form definiton override builders if it wants to.
-          let builderFn = f.builder || field.builder;
+              // Let the form definiton override builders if it wants to.
+              let builderFn = f.builder || field.builder;
 
-          // Builders are either a function or a list of functions.
-          if (typeof builderFn === 'function') {
-            builderFn(args);
-          }
-          else {
-            builderFn.forEach(function(fn) { fn(args); });
-          }
+              // Builders are either a function or a list of functions.
+              if (typeof builderFn === 'function') {
+                builderFn(args);
+              } else {
+                builderFn.forEach(function (fn) {
+                  fn(args);
+                });
+              }
 
-          // Append
-          (checkForSlot(f, slots) || frag).appendChild(tmpl);
-        }
-        return frag;
-      },
-      container);
+              // Append
+              (checkForSlot(f, slots) || frag).appendChild(tmpl);
+            }
+            return frag;
+          },
+          container);
 
-      return container;
-    };
+        return container;
+      };
 
-    return {
-      /**
-       * Builds a form from a canonical form definition
-       */
-      build: function(form, decorator, slots, lookup) {
-        return build(form, decorator, function(form, field) {
-          if (form.type === 'template') {
-            return form.template;
-          }
-          return $templateCache.get(field.template);
-        }, slots, undefined, undefined, lookup);
-      },
-      builder: builders,
-      stdBuilders: stdBuilders,
-      internalBuild: build,
-    };
-  } ];
+      return {
+        /**
+         * Builds a form from a canonical form definition
+         */
+        build: function (form, decorator, slots, lookup) {
+          return build(form, decorator, function (form, field) {
+            if (form.type === 'template') {
+              return form.template;
+            }
+            return $templateCache.get(field.template);
+          }, slots, undefined, undefined, lookup);
+        },
+        builder: builders,
+        stdBuilders: stdBuilders,
+        internalBuild: build,
+      };
+    }
+  ];
 }

@@ -30,13 +30,18 @@ module.exports = {
     "angular-schema-form": [ 'json-schema-form-core', path.join(__dirname, 'src', 'schema-form.module') ]
   },
   output: {
-    path: path.join(__dirname, 'dist'),
+    // For using demo folder
+    path: path.join(__dirname, 'demo/html-views/angular-schema-form'),
+    // For using example folder
+    //path: path.join(__dirname, 'dist'),
     filename: '[name].js'
   },
   resolve: {
     modules: [
-      path.join(__dirname, "..", "json-schema-form-core", "dist"),
-      path.join(__dirname, "..", "angular-schema-form-bootstrap", "dist"),
+      // Modified to include depened projects
+      path.join(__dirname, "./dependencies", "json-schema-form-core", "dist"),
+      path.join(__dirname, "./dependencies", "angular-schema-form-bootstrap", "dist"),
+      // ------------------------------------
       path.join(__dirname, "src"),
       path.join(__dirname, "src", "directives"),
       path.join(__dirname, "src", "services"),
